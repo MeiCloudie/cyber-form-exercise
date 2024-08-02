@@ -1,20 +1,16 @@
-// import React from "react"
 import { Table, Tag } from "antd"
 import ButtonCustom from "./ButtonCustom"
 
-const TableNhanVien = ({ data, handleDeleteNhanVien }) => {
+const TableNhanVien = ({
+  data,
+  handleDeleteNhanVien,
+  handleGetInforNhanVien,
+}) => {
   const columns = [
     {
-      // Tiêu đề các cột
       title: "MSNV",
-      // Giúp xác định thuộc tính sẽ gọi tới để lấy dữ liệu
       dataIndex: "msnv",
-      // Định danh cột đang sử dụng
       key: "msnv",
-      // quyết định cấu trúc jsx hiển thị trên giao diện, có 3 tham số là text(nội dung của dataIndex lấy về),record(đại diện cho phần tử đang lấy dữ liệu),index(vị trí index của record trong data)
-      // render: (text, record, index) => {
-      //   return <button className="bg-red-500">{text}</button>;
-      // },
     },
     {
       title: "Họ tên",
@@ -31,7 +27,7 @@ const TableNhanVien = ({ data, handleDeleteNhanVien }) => {
       key: "gioiTinh",
       dataIndex: "gioiTinh",
       render: (text, record, index) => {
-        return <Tag color={text == "Nam" ? "magenta" : "geekblue"}>{text}</Tag>
+        return <Tag color={text === "Nam" ? "magenta" : "geekblue"}>{text}</Tag>
       },
     },
     {
@@ -41,18 +37,21 @@ const TableNhanVien = ({ data, handleDeleteNhanVien }) => {
         return (
           <>
             <ButtonCustom
-              onClick={() => {
-                handleDeleteNhanVien(record.msnv)
-              }}
+              onClick={() => handleDeleteNhanVien(record.msnv)}
               content={"Xoá"}
               bgColor="bg-red-500"
             />
-            <ButtonCustom content={"Sửa"} bgColor="bg-purple-500" />
+            <ButtonCustom
+              onClick={() => handleGetInforNhanVien(record)}
+              content={"Sửa"}
+              bgColor="bg-purple-500"
+            />
           </>
         )
       },
     },
   ]
+
   return (
     <div className="mt-10">
       <Table columns={columns} dataSource={data} />

@@ -8,19 +8,9 @@ import * as yup from "yup"
 import { NotificationContext } from "../../App"
 
 const DemoFormReact = () => {
-  // const [value, setValue] = useState({
-  //   hoTen: "",
-  //   email: "",
-  // });
-  // console.log(value);
-  // const handleChange = (event) => {
-  //   const id = event.target.id;
-  //   setValue({ ...value, [id]: event.target.value });
-  // };
-
-  // msnv,họ tên, email, mật khẩu, ngày tháng năm sinh, giới tính, số điện thoại
-  // Form nhập dữ liệu người dùng (thuần), Table quản lí nhân viên (antd)
   const [arrNhanVien, setArrNhanVien] = useState([])
+  const [searchTerm, setSearchTerm] = useState("")
+
   const {
     handleSubmit,
     handleChange,
@@ -31,8 +21,8 @@ const DemoFormReact = () => {
     touched,
     resetForm,
     setValues,
+    isValid,
   } = useFormik({
-    // initialValues là dữ liệu mặc định của formik được cung cấp từ người dùng
     initialValues: {
       msnv: "",
       hoTen: "",
@@ -42,16 +32,10 @@ const DemoFormReact = () => {
       gioiTinh: "",
       ngaySinh: "",
     },
-    // onSubmit được thực thi khi form bắt đầu chạy sự kiện submit, tham số values đại diện cho dữ liệu của tất cả field trong form
     onSubmit: (values, { resetForm }) => {
-      console.log(values)
-      // const newArrNhanVien = [...arrNhanVien];
-      // newArrNhanVien.push(values);
-      // setArrNhanVien(newArrNhanVien);
       setArrNhanVien([...arrNhanVien, values])
       resetForm()
     },
-    // ở phương thức yup.object sẽ nhận một object chứa thông tin các validation dành cho các field ở initialValues
     validationSchema: yup.object({
       email: yup
         .string()
@@ -76,19 +60,12 @@ const DemoFormReact = () => {
         ),
       hoTen: yup.string().matches(/^[A-Za-zÀ-ỹ\s]+$/, "Vui lòng nhập chữ"),
       gioiTinh: yup.string().required("Vui lòng chọn giới tính"),
-      // msnv: gồm từ 4 đến 8 ký tự, không bỏ trống
-      // số điện thoại: nhập đúng số điện thoại việt nam (regex)
-      // matKhau: bao gồm ít nhất 1 ký tự đặc biệt, ít nhất 1 chữ cái viết hoa và có ít nhất một số
-      // giới tính: bắt buộc chọn
-      // họ tên: phải là chữ
       ngaySinh: yup.string().required("Vui lòng nhập ngày sinh"),
     }),
   })
 
-  // console.log(errors)
-  // console.log(touched)
-
   const valueContext = useContext(NotificationContext)
+
   const deleteNhanVien = (msnv) => {
     const newArrNhanVien = [...arrNhanVien]
     const index = newArrNhanVien.findIndex((item, index) => item.msnv == msnv)
@@ -104,15 +81,30 @@ const DemoFormReact = () => {
   }
 
   const getInforNhanVien = (record) => {
-    // sử dụng phương thức setValues để lấy record và cập nhật lên form
+    setValues(record)
   }
 
   const updateNhanVien = () => {
-    // sử dụng isValid từ formik để kiểm tra, nếu không còn lỗi thì sẽ cập nhật dữ liệu
+    if (isValid) {
+      const updatedArrNhanVien = arrNhanVien.map((nhanVien) =>
+        nhanVien.msnv === values.msnv ? values : nhanVien
+      )
+      setArrNhanVien(updatedArrNhanVien)
+      resetForm()
+      valueContext.handleNotification(
+        "success",
+        "Cập nhật nhân viên thành công"
+      )
+    } else {
+      valueContext.handleNotification("error", "Dữ liệu không hợp lệ")
+    }
   }
 
-  // Tìm kiếm nhân viên (lọc theo tên)
-  const searchNhanVien = () => {}
+  const searchNhanVien = () => {
+    return arrNhanVien.filter((nhanVien) =>
+      nhanVien.hoTen.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+  }
 
   return (
     <div>
@@ -173,13 +165,9 @@ const DemoFormReact = () => {
               className="!w-full"
               format={"DD-MM-YYYY"}
               onChange={(date, dateString) => {
-                console.log(dateString)
                 setFieldValue("ngaySinh", dateString)
               }}
               onBlur={() => handleBlur({ target: { name: "ngaySinh" } })}
-              // style={{
-              //   width: "100%",
-              // }}
             />
             {errors.ngaySinh && touched.ngaySinh ? (
               <p className="text-red-500">{errors.ngaySinh}</p>
@@ -232,38 +220,29 @@ const DemoFormReact = () => {
               bgColor="bg-black"
             />
             <ButtonCustom
+              onClick={updateNhanVien}
               content={"Cập nhật nhân viên"}
               bgColor="bg-yellow-500"
             />
           </div>
         </div>
-        {/* <InputCustom
-          labelContent={"Họ tên"}
-          placeholder={"Vui lòng nhập họ tên"}
-          name={"hoTen"}
-          value={formik.values.hoTen}
-          onChange={formik.handleChange}
-          id={"hoTen"}
-        /> */}
       </form>
 
-      {/* Tìm kiếm */}
       <div className="my-4">
         <InputCustom
           labelContent={"Tìm kiếm (theo Họ Tên)"}
           placeholder={"Tìm kiếm..."}
           name={"timKiem"}
-          value={values.timKiem}
-          onChange={handleChange}
-          id={"timKiem"}
-          onBlur={handleBlur}
-          error={errors.timKiem}
-          touched={touched.timKiem}
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
         />
       </div>
 
-      {/* Danh sách hiển thị dạng bảng */}
-      <TableNhanVien data={arrNhanVien} handleDeleteNhanVien={deleteNhanVien} />
+      <TableNhanVien
+        data={searchNhanVien()}
+        handleDeleteNhanVien={deleteNhanVien}
+        handleGetInforNhanVien={getInforNhanVien}
+      />
     </div>
   )
 }
